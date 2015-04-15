@@ -10,8 +10,8 @@ dic = {}
 feature = np.zeros(5616)
 
 def infile():
-    ark = open('data/fbank/HW2_a.ark','r')
-    lab = open('data/label/HW2_a.lab','r')
+    ark = open('../data/fbank/HW2_a.ark','r')
+    lab = open('../data/label/HW2_a.lab','r')
     for line in ark:
         s = line.rstrip().split(' ')
         for line in lab:
@@ -25,7 +25,7 @@ def infile():
                 break
 
 def charto48(c):
-    chrmap = open('data/48_idx_chr.map','r')
+    chrmap = open('../data/48_idx_chr.map','r')
     for line in chrmap:
         s = line.split()
         for line in s:

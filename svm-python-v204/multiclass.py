@@ -33,6 +33,8 @@ def init_model(sample, sm, sparm):
     # the classifier when reading the model from the file.
     sm.num_features = max(max(x) for x,y in sample)[0]+1
     sm.num_classes = max(y for x,y in sample)
+    #print("Hihi : {}".format(sample[2]))
+    #print("Hihi : {}".format(max(sample[2])))
     sm.size_psi = sm.num_features
     #print 'size_psi set to',sm.size_psi
 
@@ -52,6 +54,7 @@ def classify_example(x, sm, sparm):
     # Construct the discriminant-label pairs.
     scores = [(classification_score(x,c,sm,sparm), c)
               for c in xrange(1,sm.num_classes+1)]
+    print("I am here {}".foramt(sm.num_classes+1))
     # Return the label with the max discriminant value.
     return max(scores)[1]
 
@@ -67,8 +70,14 @@ def find_most_violated_constraint(x, y, sm, sparm):
 def psi(x, y, sm, sparm):
     """Returns the combined feature vector Psi(x,y)."""
     # Just increment the feature index to the appropriate stack position.
-    #vecness = [(k,v) for k,v in x]
+    print("LALALA")
+    vecness = [(k,v) for k,v in x]
+    #print(vecness)
+    print("MAMAMA")
+    #print(y)
     pvec = svmapi.Sparse(x, kernel_id=y)
+    print(pvec)
+    print("GUGUGU")
     #print list(sm.w)
     #print pveca
     #import pdb; pdb.set_trace()
