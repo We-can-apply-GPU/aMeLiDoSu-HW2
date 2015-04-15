@@ -13,6 +13,7 @@ def parse_parameters(sparm):
     If this function is not implemented, any custom command line
     arguments are ignored and sparm remains unchanged."""
     sparm.arbitrary_parameter = 'I am an arbitrary parameter!'
+    print("Hihi")
 
 def parse_parameters_classify(attribute, value):
     """Process a single custom command line argument for the classifier.
