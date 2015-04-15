@@ -65,12 +65,13 @@ def read_examples(filename, sparm):
         #element = (datum[i][1],datum[i][2])
         if(datum[i][0] not in seqDic):
             seqDic[datum[i][0]] = ([],[])
-        seqDic[datum[i][0]][0].append(datum[i][1])
+        #seqDic[datum[i][0]][0].append(datum[i][1])
         seqDic[datum[i][0]][0].append([float(datum[i][k]) for k in range(1,len(datum[i])-1)])
         seqDic[datum[i][0]][1].append(datum[i][-1])
     ans = []
     for key in seqDic:
         ans.append(seqDic[key])
+    print("KAKA")
     print(ans)
     return ans
 
@@ -224,9 +225,9 @@ def psi(x, y, sm, sparm):
         num1 = charto48(y[i])
         num2 = charto48(y[i+1])
         feature[FBANKS*PHONES + PHONES*num1 + num2] += 1
-        for j in range(69):
-            feature[num1*69+j] += y[j]
-    #print(feature)
+        for j in range(FBANKS):
+            feature[num1*FBANKS+j] += x[i][j]
+    print(feature)
     return svmapi.Sparse(feature)
 
 def loss(y, ybar, sparm):
