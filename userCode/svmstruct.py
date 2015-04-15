@@ -71,8 +71,6 @@ def read_examples(filename, sparm):
     ans = []
     for key in seqDic:
         ans.append(seqDic[key])
-    print("KAKA")
-    print(ans)
     return ans
 
 def init_model(sample, sm, sparm):
@@ -183,7 +181,7 @@ def classify_example(x, sm, sparm):
 
     return ans
 
-def find_most_violated_constraint(x, y, sm, sparm):
+#def find_most_violated_constraint(x, y, sm, sparm):
     """Return ybar associated with x's most violated constraint.
 
     Returns the label ybar for pattern x corresponding to the most
@@ -200,26 +198,27 @@ def find_most_violated_constraint(x, y, sm, sparm):
     loss into account at all, but it isn't always a terrible
     approximation.  One still technically maintains the empirical
     risk bound condition, but without any regularization."""
-    score = classify_example(x,sm,sparm)
-    discy, discny = y*score, -y*score + 1
-    if discy > discny: return y
-    return -y
+    #score = classify_example(x,sm,sparm)
+    #discy, discny = y*score, -y*score + 1
+    #if discy > discny: return y
+    #return -y
+    #pass
 
-def find_most_violated_constraint_slack(x, y, sm, sparm):
+#def find_most_violated_constraint_slack(x, y, sm, sparm):
     """Return ybar associated with x's most violated constraint.
 
     The find most violated constraint function for slack rescaling.
     The default behavior is that this returns the value from the
     general find_most_violated_constraint function."""
-    return find_most_violated_constraint(x, y, sm, sparm)
+    #return find_most_violated_constraint(x, y, sm, sparm)
 
-def find_most_violated_constraint_margin(x, y, sm, sparm):
+#def find_most_violated_constraint_margin(x, y, sm, sparm):
     """Return ybar associated with x's most violated constraint.
 
     The find most violated constraint function for margin rescaling.
     The default behavior is that this returns the value from the
     general find_most_violated_constraint function."""
-    return find_most_violated_constraint(x, y, sm, sparm)
+    #return find_most_violated_constraint(x, y, sm, sparm)
 
 def psi(x, y, sm, sparm):
     """Return a feature vector representing pattern x and label y.
@@ -233,14 +232,15 @@ def psi(x, y, sm, sparm):
     # constant bias feature we pretend that we have.
     import svmapi
     def charto48(c):
+        a = 0
         chrmap = open('../data/48_idx_chr.map','r')
         for line in chrmap:
             s = line.split()
             for line in s:
                 if s[0] == c:
-                    num = int(s[1])
+                    a = int(s[1])
                     break
-        return num
+        return a
 
     ###IMPORTANT###
     # (x,y) must be a value in seqDic!!
@@ -280,8 +280,11 @@ def loss(y, ybar, sparm):
     The default behavior is to perform 0/1 loss based on the truth of
     y==ybar."""
     # If they're the same sign, then the loss should be 0.
-    if y*ybar > 0: return 0
-    return 1
+    cnt = 0
+    for i,j in zip(y,ybar):
+        if(i != j):
+            cnt += 1
+    return cnt
 
 def print_iteration_stats(ceps, cached_constraint, sample, sm,
                           cset, alpha, sparm):
