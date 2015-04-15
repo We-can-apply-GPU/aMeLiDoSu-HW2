@@ -44,6 +44,8 @@ def read_examples(filename, sparm):
             ([0,0,1,1],-1), ([1,0,0,0], 1), ([0,0,0,1],-1)]
 
 def init_model(sample, sm, sparm):
+    PHONES = 48
+    FCBANKS = 69
     """Initializes the learning model.
     
     Initialize the structure model sm.  The sm.size_psi must be set to
@@ -54,7 +56,9 @@ def init_model(sample, sm, sparm):
     # list of four features.  We just want a linear rule, so we have a
     # weight corresponding to each feature.  We also add one to allow
     # for a last "bias" feature.
-    sm.size_psi = len(sample[0][0])+1
+    #sm.size_psi = len(sample[0][0])+1
+    sm.size_psi = (PHONES + FCBANKS) * PHONES  #48*48 + 69 * 48
+
 
 def init_constraints(sample, sm, sparm):
     """Initializes special constraints.
