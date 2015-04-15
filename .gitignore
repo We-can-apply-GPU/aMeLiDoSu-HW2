@@ -1,5 +1,7 @@
 data/
 feature.CSV
+svm-python-v204/svm_python_learn
+svm-python-v204/svm_python_classify
 
 # Object files
 *.o

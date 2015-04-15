@@ -110,49 +110,13 @@ def init_constraints(sample, sm, sparm):
         constraints.append((lhs, 0))
     return constraints
 
-def dot(x, y):
-    return sum(xx*yy for xx, yy in zip(x, y))
-
-def get_max(x):
-    max_index = 0
-    for i in range(len(x)):
-        if x[i] > x[max_index]:
-            max_index = i
-    return max_index
 
 def classify_example(x, sm, sparm):
     """Given a pattern x, return the predicted label."""
     # Believe it or not, this is a dot product.  The last element of
     # sm.w is assumed to be the weight associated with the bias
     # feature as explained earlier.
-    
-    class_size = 48
-    observation_size = len(x[0])
-     
-    prob_pre = [dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)]
-    prob_now =[0] * class_size
-    trace = [[0] * class_size] * len(x) 
-
-    for each_observation, each_trace in zip(x[1:], trace[1:]):
-        for now in range(class_size):
-            tmp = [0] * class_size
-            for pre in range(class_size):
-                tmp[pre] = prob_pre[pre]
-                tmp[pre] += dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation)
-                tmp[pre] += sm.w[observation_size*class_size + pre * class_size + now]
-            max_index = get_max(tmp)
-            prob_now[now] = tmp[max_index]
-            each_trace[now] = max_index
-
-        for i in range(class_size):
-            prob_pre[i] = prob_now[i]
-
-    ans = [0] * len(x)
-    ans[-1] = get_max(prob_pre)
-    for i in range(1, class_size):
-        ans[-i-1] = trace[-i][ans[-i]]
-
-    return ans
+    return sum([i*j for i,j in zip(x,sm.w[:-1])]) + sm.w[-1]
 
 def find_most_violated_constraint(x, y, sm, sparm):
     """Return ybar associated with x's most violated constraint.
@@ -160,7 +124,6 @@ def find_most_violated_constraint(x, y, sm, sparm):
     Returns the label ybar for pattern x corresponding to the most
     violated constraint according to SVM^struct cost function.  To
     find which cost function you should use, check sparm.loss_type for
-
     whether this is slack or margin rescaling (1 or 2 respectively),
     and check sparm.slack_norm for whether the slack vector is in an
     L1-norm or L2-norm in the QP (1 or 2 respectively).
