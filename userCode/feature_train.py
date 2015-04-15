@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 File: feature_train.py
-Description: feature exaction
+Description: feature extraction
 """
 import numpy as np
 
@@ -10,8 +10,8 @@ dic = {}
 feature = np.zeros(5616)
 
 def infile():
-    ark = open('data/fbank/train.ark','r')
-    lab = open('data/label/train.lab','r')
+    ark = open('../data/fbank/trainToy.ark','r')
+    lab = open('../data/label/trainToy.lab','r')
     for line in ark:
         s = line.rstrip().split(' ')
         for line in lab:
@@ -26,7 +26,7 @@ def infile():
     #dic=[Instance ID + feature + label]
 
 def charto48(c):
-    chrmap = open('data/48_idx_chr.map','r')
+    chrmap = open('../data/48_idx_chr.map','r')
     for line in chrmap:
         s = line.split()
         for line in s:
@@ -35,7 +35,7 @@ def charto48(c):
                 break
     return num
 
-def exact(start, end):
+def extract(start, end):
     for i in range (start, end):
         num = charto48(dic[i][-1])
         if i != end-1:
@@ -60,11 +60,11 @@ if __name__=="__main__":
     startnum=0;                     #specific utterance start from
     for i in range (0,len(dic)):
         if nowID not in dic[i][0]:
-            exact(startnum,i)
+            extract(startnum,i)
             startnum=i
             nowID=dic[i][0];
             nowID=nowID[0:-2]
             feature = np.zeros(5616)  #initial
         if i == len(dic)-1:
-            exact(startnum,len(dic))
+            extract(startnum,len(dic))
 

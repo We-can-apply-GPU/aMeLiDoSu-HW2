@@ -1,7 +1,8 @@
 """A module that SVM^python interacts with to do its evil bidding."""
 
+PHONES = 48
+FBANKS = 69
 # Thomas Finley, tfinley@gmail.com
-
 def parse_parameters(sparm):
     """Sets attributes of sparm based on command line arguments.
     
@@ -13,7 +14,6 @@ def parse_parameters(sparm):
     If this function is not implemented, any custom command line
     arguments are ignored and sparm remains unchanged."""
     sparm.arbitrary_parameter = 'I am an arbitrary parameter!'
-    print("Hihi")
 
 def parse_parameters_classify(attribute, value):
     """Process a single custom command line argument for the classifier.
@@ -41,12 +41,40 @@ def read_examples(filename, sparm):
     # problem for learning.  The correct hypothesis would obviously
     # tend to have a positive weight for the first feature, and a
     # negative weight for the 4th feature.
-    return [([1,1,0,0], 1), ([1,0,1,0], 1), ([0,1,0,1],-1),
-            ([0,0,1,1],-1), ([1,0,0,0], 1), ([0,0,0,1],-1)]
+    ark = open('../data/fbank/trainToy.ark','r')
+    lab = open('../data/label/trainToy.lab','r')
+    datum = []
+    curPos = 0
+    seqDic = {}
+
+    for line in ark:
+        s = line.rstrip().split(' ')
+        for line in lab:
+            l = line.rstrip().split(',')
+            if s[0] == l[0]:        #map label to train data
+                for i in range(1,len(s)):
+                    s[i] = float(s[i])
+                seqs = s[0].rstrip().split('_')
+                s[0] = seqs[0] + seqs[1]
+                s.append(l[1])
+                datum.append(s) 
+                curPos += 1
+                break               
+    #until now , datum is the list of [ID+frame  FBANKfeature phone]
+    for i in range(len(datum)):
+        #element = (datum[i][1],datum[i][2])
+        if(datum[i][0] not in seqDic):
+            seqDic[datum[i][0]] = ([],[])
+        seqDic[datum[i][0]][0].append(datum[i][1])
+        seqDic[datum[i][0]][0].append([float(datum[i][k]) for k in range(1,len(datum[i])-1)])
+        seqDic[datum[i][0]][1].append(datum[i][-1])
+    ans = []
+    for key in seqDic:
+        ans.append(seqDic[key])
+    print(ans)
+    return ans
 
 def init_model(sample, sm, sparm):
-    PHONES = 48
-    FCBANKS = 69
     """Initializes the learning model.
     
     Initialize the structure model sm.  The sm.size_psi must be set to
@@ -58,7 +86,7 @@ def init_model(sample, sm, sparm):
     # weight corresponding to each feature.  We also add one to allow
     # for a last "bias" feature.
     #sm.size_psi = len(sample[0][0])+1
-    sm.size_psi = (PHONES + FCBANKS) * PHONES  #48*48 + 69 * 48
+    sm.size_psi = (PHONES + FBANKS) * PHONES  #48*48 + 69 * 48
 
 
 def init_constraints(sample, sm, sparm):
@@ -203,9 +231,40 @@ def psi(x, y, sm, sparm):
     # or -1) times the feature vector for x, including that special
     # constant bias feature we pretend that we have.
     import svmapi
-    thePsi = [0.5*y*i for i in x]
-    thePsi.append(0.5*y) # Pretend as though x had an 1 at the end.
-    return svmapi.Sparse(thePsi)
+    def charto48(c):
+        chrmap = open('../data/48_idx_chr.map','r')
+        for line in chrmap:
+            s = line.split()
+            for line in s:
+                if s[0] == c:
+                    num = int(s[1])
+                    break
+        return num
+
+    ###IMPORTANT###
+    # (x,y) must be a value in seqDic!!
+    #for key in seqDic:
+        #for i in range(len(key)-1):
+            #num1 = charto48(seqDic[key][i][-1])
+            #num2 = charto48(seqDic[key][i+1][-1])
+    #for i in range (start, end):
+        #num = charto48(dic[i][-1])
+        #if i != end-1:
+            #num2 = charto48(dic[i+1][-1])
+            #feature[48*69+48*num+num2] += 1
+        #for j in range (0, 69):
+            #feature[num*69+j] += dic[i][1+j]
+    feature = [0.0 for i in range(sm.size_psi)]
+    for i in range(len(x) -1 ):   #y must be the same
+        #num1 = charto48(seqDic[key][i][-1])
+        #num2 = charto48(seqDic[key][i+1][-1])
+        num1 = charto48(y[i])
+        num2 = charto48(y[i+1])
+        feature[FBANKS*PHONES + PHONES*num1 + num2] += 1
+        for j in range(69):
+            feature[num1*69+j] += y[j]
+    #print(feature)
+    return svmapi.Sparse(feature)
 
 def loss(y, ybar, sparm):
     """Return the loss of ybar relative to the true labeling y.
