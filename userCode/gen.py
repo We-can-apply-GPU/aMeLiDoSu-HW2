@@ -4,10 +4,10 @@ import sys
 
 def main():
 
-    data = open("data/fbank/train.ark")
-    labl = open("data/label/train.lab")
-    outdata = open("data/fbank/trainToy.ark", "w")
-    outlabl = open("data/label/trainToy.lab", "w")
+    data = open("../svm-python-v204/data/fbank/train.ark")
+    labl = open("../svm-python-v204/data/label/train.lab")
+    outdata = open("../svm-python-v204/data/fbank/trainToy.ark", "w")
+    outlabl = open("../svm-python-v204/data/label/trainToy.lab", "w")
 
     dic = {}
 

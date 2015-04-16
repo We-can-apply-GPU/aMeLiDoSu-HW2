@@ -41,8 +41,8 @@ def read_examples(filename, sparm):
     # problem for learning.  The correct hypothesis would obviously
     # tend to have a positive weight for the first feature, and a
     # negative weight for the 4th feature.
-    ark = open('../data/fbank/trainToy.ark','r')
-    lab = open('../data/label/trainToy.lab','r')
+    ark = open('data/fbank/trainToy.ark','r')
+    lab = open('data/label/trainToy.lab','r')
     datum = []
     curPos = 0
     seqDic = {}
@@ -233,7 +233,7 @@ def psi(x, y, sm, sparm):
     import svmapi
     def charto48(c):
         a = 0
-        chrmap = open('../data/48_idx_chr.map','r')
+        chrmap = open('data/48_idx_chr.map','r')
         for line in chrmap:
             s = line.split()
             for line in s:
