@@ -166,6 +166,8 @@ def psi(x, y, sm, sparm):
     # or -1) times the feature vector for x, including that special
     # constant bias feature we pretend that we have.
     import svmapi
+    thePsi = np.zeros(sm.size_psi) #initial
+
     thePsi = [0.5*y*i for i in x]
     thePsi.append(0.5*y) # Pretend as though x had an 1 at the end.
     return svmapi.Sparse(thePsi)
