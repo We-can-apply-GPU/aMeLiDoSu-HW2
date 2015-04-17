@@ -36,7 +36,7 @@ def parse_parameters_classify(attribute, value):
 
     If this function is not implemented, any custom command line
     arguments are ignored."""
-    print 'Got a custom command line argument %s %s' % (attribute, value)
+    #print 'Got a custom command line argument %s %s' % (attribute, value)
 
 def read_examples(filename, sparm):
     """Reads and returns x,y example pairs from a file.
@@ -83,7 +83,7 @@ def read_examples(filename, sparm):
         seqDic[datum[i][0]][1].append(charto48(datum[i][-1]))
     ans = []
     for key in seqDic:
-        ans.append((np.array(seqDic[key][0]),seqDic[key][1]))
+        ans.append((np.array(seqDic[key][0]),np.array(seqDic[key][1])))
     return ans
 
 def init_model(sample, sm, sparm):
@@ -165,30 +165,51 @@ def classify_example(x, sm, sparm):
     # Believe it or not, this is a dot product.  The last element of
     # sm.w is assumed to be the weight associated with the bias
     # feature as explained earlier.
-    
+    #class_size = 48
+    #observation_size = len(x[0])
+     
+    #prob_pre = [np.dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)]
+    #prob_now =[0] * class_size
+    #trace = [[0] * class_size] * len(x) 
+
+    #for each_observation, each_trace in zip(x[1:], trace[1:]):
+        #for now in range(class_size):
+            #tmp = [0] * class_size
+            #for pre in range(class_size):
+                #tmp[pre] = prob_pre[pre] + np.dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation) + sm.w[observation_size*class_size + pre * class_size + now]
+            #max_index = get_max(tmp)
+            #prob_now[now] = tmp[max_index]
+            #each_trace[now] = max_index
+
+        #for i in range(class_size):
+            #prob_pre[i] = prob_now[i]
+
+    #ans = [0] * len(x)
+    #ans[-1] = get_max(prob_pre)
+    #for i in range(1, len(x)):
+        #ans[-i-1] = trace[-i][ans[-i]]
+
+    #return ans
     class_size = 48
     observation_size = len(x[0])
      
-    prob_pre = [np.dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)]
-    prob_now =[0] * class_size
-    trace = [[0] * class_size] * len(x) 
+    prob_pre = np.array([np.dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)])
+    prob_now =np.zeros(class_size)
+    trace = np.zeros((len(x),class_size)) 
 
     for each_observation, each_trace in zip(x[1:], trace[1:]):
         for now in range(class_size):
-            tmp = [0] * class_size
+            tmp = np.zeros(class_size)
             for pre in range(class_size):
-                tmp[pre] = prob_pre[pre]
-                tmp[pre] += np.dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation)
-                tmp[pre] += sm.w[observation_size*class_size + pre * class_size + now]
-            max_index = get_max(tmp)
+                tmp[pre] = prob_pre[pre] + np.dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation) + sm.w[observation_size*class_size + pre * class_size + now]
+            max_index = np.argmax(tmp)
             prob_now[now] = tmp[max_index]
             each_trace[now] = max_index
 
-        for i in range(class_size):
-            prob_pre[i] = prob_now[i]
+        prob_pre[i] = prob_now[i]
 
     ans = [0] * len(x)
-    ans[-1] = get_max(prob_pre)
+    ans[-1] = np.argmax(prob_pre)
     for i in range(1, len(x)):
         ans[-i-1] = trace[-i][ans[-i]]
 
@@ -234,6 +255,7 @@ def classify_example(x, sm, sparm):
     #return find_most_violated_constraint(x, y, sm, sparm)
 
 def psi(x, y, sm, sparm):
+    print("psi")
     """Return a feature vector representing pattern x and label y.
 
     This is the combined feature function, which this returns either a
