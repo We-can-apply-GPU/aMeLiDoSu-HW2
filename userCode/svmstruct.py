@@ -347,7 +347,7 @@ def write_model(filename, sm, sparm):
     The default behavior is equivalent to
     'cPickle.dump(sm,bz2.BZ2File(filename,'w'))'."""
     import cPickle, bz2
-    f = bz2.BZ2File("../model/" + filename, 'w')
+    f = bz2.BZ2File("model/" + filename, 'w')
     cPickle.dump(sm, f)
     f.close()
 
