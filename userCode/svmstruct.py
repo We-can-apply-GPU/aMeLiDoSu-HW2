@@ -249,9 +249,7 @@ def psi(x, y, sm, sparm):
     # (x,y) must be a value in seqDic!!
     feature = np.zeros(sm.size_psi)
     #feature = [0.0 for i in range(sm.size_psi)]
-    for i in range(len(x) -1 ):   #y must be the same
-        #num1 = charto48(seqDic[key][i][-1])
-        #num2 = charto48(seqDic[key][i+1][-1])
+    for i in range(len(y) -1 ):   #y must be the same
         num1 = charto48(y[i])
         num2 = charto48(y[i+1])
         feature[FBANKS*PHONES + PHONES*num1 + num2] += 1
