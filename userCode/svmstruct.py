@@ -3,6 +3,16 @@ import numpy as np
 PHONES = 48
 FBANKS = 69
 # Thomas Finley, tfinley@gmail.com
+def charto48(c):
+    a = 0
+    chrmap = open('data/48_idx_chr.map','r')
+    for line in chrmap:
+        s = line.split()
+        for line in s:
+            if s[0] == c:
+                a = int(s[1])
+                break
+    return a
 def parse_parameters(sparm):
     """Sets attributes of sparm based on command line arguments.
     
@@ -73,7 +83,7 @@ def read_examples(filename, sparm):
         seqDic[datum[i][0]][1].append(datum[i][-1])
     ans = []
     for key in seqDic:
-        ans.append((np.array(seqDic[key][0]),seqDic[key][1]))
+        ans.append((np.array(seqDic[key][0]),charto48(seqDic[key][1])))
     return ans
 
 def init_model(sample, sm, sparm):
@@ -234,16 +244,6 @@ def psi(x, y, sm, sparm):
     # or -1) times the feature vector for x, including that special
     # constant bias feature we pretend that we have.
     import svmapi
-    def charto48(c):
-        a = 0
-        chrmap = open('data/48_idx_chr.map','r')
-        for line in chrmap:
-            s = line.split()
-            for line in s:
-                if s[0] == c:
-                    a = int(s[1])
-                    break
-        return a
 
     ###IMPORTANT###
     # (x,y) must be a value in seqDic!!
