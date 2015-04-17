@@ -80,10 +80,10 @@ def read_examples(filename, sparm):
         seqDic[datum[i][0]][0].append([float(datum[i][k]) for k in range(1,len(datum[i])-1)])
         #seqDic[datum[i][0]][0] = np.array(seqDic[datum[i][0]][0])
         #print("test {}".format(seqDic[datum[i][0]][0].type))
-        seqDic[datum[i][0]][1].append(datum[i][-1])
+        seqDic[datum[i][0]][1].append(charto48(datum[i][-1]))
     ans = []
     for key in seqDic:
-        ans.append((np.array(seqDic[key][0]),charto48(seqDic[key][1])))
+        ans.append((np.array(seqDic[key][0]),seqDic[key][1]))
     return ans
 
 def init_model(sample, sm, sparm):
