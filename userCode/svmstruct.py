@@ -177,9 +177,9 @@ def classify_example(x, sm, sparm):
         for i in range(class_size):
             prob_pre[i] = prob_now[i]
 
-    ans = [0] * len(x[0])
+    ans = [0] * len(x)
     ans[-1] = get_max(prob_pre)
-    for i in range(1, class_size):
+    for i in range(1, len(x)):
         ans[-i-1] = trace[-i][ans[-i]]
 
     return ans
@@ -275,7 +275,7 @@ def loss(y, ybar, sparm):
     for i,j in zip(y,ybar):
         if(i != j):
             cnt += 1
-    return (cnt/len(ybar))
+    return float(cnt)/len(ybar)
 
 def print_iteration_stats(ceps, cached_constraint, sample, sm,
                           cset, alpha, sparm):
