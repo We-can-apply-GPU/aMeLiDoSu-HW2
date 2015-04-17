@@ -32,18 +32,15 @@ def read_examples(filename, sparm):
                 seqs = s[0].rstrip().split('_')
                 s[0] = seqs[0] + seqs[1]
                 s.append(l[1])
-                datum.append(s) 
+                datum.append(s)
                 curPos += 1
-                break               
+                break
     #until now , datum is the list of [ID+frame  FBANKfeature phone]
     for i in range(len(datum)):
         #element = (datum[i][1],datum[i][2])
         if(datum[i][0] not in seqDic):
             seqDic[datum[i][0]] = ([],[])
-        #seqDic[datum[i][0]][0].append(datum[i][1])
         seqDic[datum[i][0]][0].append([float(datum[i][k]) for k in range(1,len(datum[i])-1)])
-        #seqDic[datum[i][0]][0] = np.array(seqDic[datum[i][0]][0])
-        #print("test {}".format(seqDic[datum[i][0]][0].type))
         seqDic[datum[i][0]][1].append(charto48(datum[i][-1]))
     ans = []
     for key in seqDic:
@@ -87,7 +84,84 @@ def viterbi(x, w, y = []):
     for i in range(1, len(x)):
         ans[-i-1] = trace[-i][ans[-i]]
 
-    return ans
+def init_constraints(sample, sm, sparm):
+    """Initializes special constraints.
+
+    Returns a sequence of initial constraints.  Each constraint in the
+    returned sequence is itself a sequence with two items (the
+    intention is to be a tuple).  The first item of the tuple is a
+    document object.  The second item is a number, indicating that the
+    inner product of the feature vector of the document object with
+    the linear weights must be greater than or equal to the number
+    (or, in the nonlinear case, the evaluation of the kernel on the
+    feature vector with the current model must be greater).  This
+    initializes the optimization problem by allowing the introduction
+    of special constraints.  Typically no special constraints are
+    necessary.  A typical constraint may be to ensure that all feature
+    weights are positive.
+
+    Note that the slack id must be set.  The slack IDs 1 through
+    len(sample) (or just 1 in the combined constraint option) are used
+    by the training examples in the sample, so do not use these if you
+    do not intend to share slack with the constraints inferred from
+    the training data.
+
+    The default behavior is equivalent to returning an empty list,
+    i.e., no constraints."""
+    import svmapi
+
+    if True:
+        # Just some example cosntraints.
+        c, d = svmapi.Sparse, svmapi.Document
+        # Return some really goofy constraints!  Normally, if the SVM
+        # is allowed to converge normally, the second and fourth
+        # features are 0 and -1 respectively for sufficiently high C.
+        # Let's make them be greater than 1 and 0.2 respectively!!
+        # Both forms of a feature vector (sparse and then full) are
+        # shown.
+        return [(d([c([(1,1)])],slackid=len(sample)+1),   1),
+                (d([c([0,0,0,1])],slackid=len(sample)+1),.2)]
+    # Encode positivity constraints.  Note that this constraint is
+    # satisfied subject to slack constraints.
+    constraints = []
+    for i in xrange(sm.size_psi):
+        # Create a sparse vector which selects out a single feature.
+        sparse = svmapi.Sparse([(i,1)])
+        # The left hand side of the inequality is a document.
+        lhs = svmapi.Document([sparse], costfactor=1, slackid=i+1+len(sample))
+        # Append the lhs and the rhs (in this case 0).
+        constraints.append((lhs, 0))
+    return constraints
+
+
+#def classify_example(x, sm, sparm):
+    #"""Given a pattern x, return the predicted label."""
+    #ql = list(sm.w)
+    #obs = np.array(ql[:69*48]).reshape((48, 69))
+    #trans = np.array(ql[69*48:]).reshape((48, 48))
+
+    #LEN = len(x)
+    #xx = np.array(x).reshape((LEN, 69))
+    #xxt = np.dot(xx, obs.T)
+
+    #y = []
+    #lgprob = np.zeros((48,1))
+    #lst = []
+
+    #for i in range(LEN):
+        #p = lgprob + trans + xxt[i,:]
+        #newlst = np.argmax(p, axis=0)
+        #lst.append(newlst)
+        #lgprob = np.max(p, axis=0).reshape((48,1))
+
+    #now = np.argmax(lgprob)
+    #y.append(now)
+    #for i in range(LEN-1, 0, -1):
+        #now = lst[i][now]
+        #y.append(now)
+
+    #y = y[::-1]
+    #return y
 
 
 def classify_example(x, sm, sparm):
@@ -185,10 +259,12 @@ def write_model(filename, sm, sparm):
 
     The default behavior is equivalent to
     'cPickle.dump(sm,bz2.BZ2File(filename,'w'))'."""
-    import cPickle, bz2
-    f = bz2.BZ2File("model/" + filename, 'w')
+    import cPickle, bz2, json
+    f = bz2.BZ2File("SVMmodel/" + filename, 'w')
     cPickle.dump(sm, f)
     f.close()
+    with open("model/" + filename,'w') as weight:
+        weight.write(json.dumps(list(sm.w)))
 
 def read_model(filename, sparm):
     """Load the structure model from a file.
