@@ -1,5 +1,5 @@
 data/
-feature.CSV
+model/
 svm-python-v204/svm_python_learn
 svm-python-v204/svm_python_classify
 

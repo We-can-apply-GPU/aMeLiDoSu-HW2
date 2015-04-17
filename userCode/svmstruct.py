@@ -41,8 +41,8 @@ def read_examples(filename, sparm):
     # problem for learning.  The correct hypothesis would obviously
     # tend to have a positive weight for the first feature, and a
     # negative weight for the 4th feature.
-    ark = open('data/fbank/trainToy.ark','r')
-    lab = open('data/label/trainToy.lab','r')
+    ark = open('data/fbank/' + filename + '.ark','r')
+    lab = open('data/label/' + filename + '.lab','r')
     datum = []
     #print("JJ{}".format(np.ones(5)))
     curPos = 0
@@ -347,7 +347,7 @@ def write_model(filename, sm, sparm):
     The default behavior is equivalent to
     'cPickle.dump(sm,bz2.BZ2File(filename,'w'))'."""
     import cPickle, bz2
-    f = bz2.BZ2File(filename, 'w')
+    f = bz2.BZ2File("../model/" + filename, 'w')
     cPickle.dump(sm, f)
     f.close()
 

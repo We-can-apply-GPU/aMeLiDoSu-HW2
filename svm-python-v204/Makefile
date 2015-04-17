@@ -1,7 +1,5 @@
 # Makefile for SVM-struct API, 03.07.04
 
-export
-
 CC = gcc
 LD = gcc
 #CC = attolcc -mempro -perfpro -block -proc -- gcc
