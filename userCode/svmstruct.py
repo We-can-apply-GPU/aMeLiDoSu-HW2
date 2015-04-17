@@ -1,8 +1,8 @@
-"""A module that SVM^python interacts with to do its evil bidding."""
 import numpy as np
 PHONES = 48
 FBANKS = 69
-# Thomas Finley, tfinley@gmail.com
+import theano.tensor as T
+
 def charto48(c):
     a = 0
     chrmap = open('data/48_idx_chr.map','r')
@@ -13,44 +13,8 @@ def charto48(c):
                 a = int(s[1])
                 break
     return a
-def parse_parameters(sparm):
-    """Sets attributes of sparm based on command line arguments.
-    
-    This gives the user code a chance to change sparm based on the
-    custom command line arguments.  The custom command line arguments
-    are stored in sparm.argv as a list of strings.  The custom command
-    lines are stored in '--option', then 'value' sequence.
-    
-    If this function is not implemented, any custom command line
-    arguments are ignored and sparm remains unchanged."""
-    sparm.arbitrary_parameter = 'I am an arbitrary parameter!'
-
-def parse_parameters_classify(attribute, value):
-    """Process a single custom command line argument for the classifier.
-
-    This gives the user code a chance to change the state of the
-    classifier based on a single custom command line argument, e.g.,
-    one that begins with two dashes.  This function will be called
-    multiple times if there are multiple custom command line
-    arguments.
-
-    If this function is not implemented, any custom command line
-    arguments are ignored."""
-    #print 'Got a custom command line argument %s %s' % (attribute, value)
 
 def read_examples(filename, sparm):
-    """Reads and returns x,y example pairs from a file.
-    
-    This reads the examples contained at the file at path filename and
-    returns them as a sequence.  Each element of the sequence should
-    be an object 'e' where e[0] and e[1] is the pattern (x) and label
-    (y) respectively.  Specifically, the intention is that the element
-    be a two-element tuple containing an x-y pair."""
-    # We're not actually reading a file in this sample binary
-    # classification task, but rather just returning a contrived
-    # problem for learning.  The correct hypothesis would obviously
-    # tend to have a positive weight for the first feature, and a
-    # negative weight for the 4th feature.
     ark = open('data/fbank/' + filename + '.ark','r')
     lab = open('data/label/' + filename + '.lab','r')
     datum = []
@@ -87,126 +51,36 @@ def read_examples(filename, sparm):
     return ans
 
 def init_model(sample, sm, sparm):
-    """Initializes the learning model.
-    
-    Initialize the structure model sm.  The sm.size_psi must be set to
-    the number of features.  The ancillary purpose is to add any
-    information to sm that is necessary from the user code
-    perspective.  This function returns nothing."""
-    # In our binary classification task, we've encoded a pattern as a
-    # list of four features.  We just want a linear rule, so we have a
-    # weight corresponding to each feature.  We also add one to allow
-    # for a last "bias" feature.
-    #sm.size_psi = len(sample[0][0])+1
     sm.size_psi = (PHONES + FBANKS) * PHONES  #48*48 + 69 * 48
 
+def viterbi(x, w, y = []):
+    prob_pre = np.zeros(PHONES)
+    prob_now = np.zeros(PHONES)
+    trace = np.zeros((len(x), PHONES), dtype=np.int16) 
+    index = 0
+    for xx, each_trace in zip(x, trace):
+        for now in range(PHONES):
+            if index == 0:
+                prob_now[now] = np.dot(w[FBANKS * now : FBANKS * (now+1)], xx[:])
+                if len(y) != 0:
+                    if now != y[index]:
+                        prob_now[now] += 1
+            else:
+                tmp = np.zeros(PHONES)
+                for pre in range(PHONES):
+                    tmp[pre] = prob_pre[pre] + np.dot(w[FBANKS * now : FBANKS * (now+1)], xx) + w[FBANKS * PHONES + pre * PHONES + now]
+                max_index = np.argmax(tmp)
+                prob_now[now] = tmp[max_index]
+                if len(y) != 0:
+                    if now != y[index]:
+                        prob_now[now] += 1
+                each_trace[now] = max_index
+        for i in range(len(prob_pre)):
+            prob_pre[i] = prob_now[i]
 
-def init_constraints(sample, sm, sparm):
-    """Initializes special constraints.
-
-    Returns a sequence of initial constraints.  Each constraint in the
-    returned sequence is itself a sequence with two items (the
-    intention is to be a tuple).  The first item of the tuple is a
-    document object.  The second item is a number, indicating that the
-    inner product of the feature vector of the document object with
-    the linear weights must be greater than or equal to the number
-    (or, in the nonlinear case, the evaluation of the kernel on the
-    feature vector with the current model must be greater).  This
-    initializes the optimization problem by allowing the introduction
-    of special constraints.  Typically no special constraints are
-    necessary.  A typical constraint may be to ensure that all feature
-    weights are positive.
-
-    Note that the slack id must be set.  The slack IDs 1 through
-    len(sample) (or just 1 in the combined constraint option) are used
-    by the training examples in the sample, so do not use these if you
-    do not intend to share slack with the constraints inferred from
-    the training data.
-
-    The default behavior is equivalent to returning an empty list,
-    i.e., no constraints."""
-    import svmapi
-
-    if True:
-        # Just some example cosntraints.
-        c, d = svmapi.Sparse, svmapi.Document
-        # Return some really goofy constraints!  Normally, if the SVM
-        # is allowed to converge normally, the second and fourth
-        # features are 0 and -1 respectively for sufficiently high C.
-        # Let's make them be greater than 1 and 0.2 respectively!!
-        # Both forms of a feature vector (sparse and then full) are
-        # shown.
-        return [(d([c([(1,1)])],slackid=len(sample)+1),   1),
-                (d([c([0,0,0,1])],slackid=len(sample)+1),.2)]
-    # Encode positivity constraints.  Note that this constraint is
-    # satisfied subject to slack constraints.
-    constraints = []
-    for i in xrange(sm.size_psi):
-        # Create a sparse vector which selects out a single feature.
-        sparse = svmapi.Sparse([(i,1)])
-        # The left hand side of the inequality is a document.
-        lhs = svmapi.Document([sparse], costfactor=1, slackid=i+1+len(sample))
-        # Append the lhs and the rhs (in this case 0).
-        constraints.append((lhs, 0))
-    return constraints
-
-#def dot(x, y):
-    #return sum(xx*yy for xx, yy in zip(x, y))
-
-def get_max(x):
-    max_index = 0
-    for i in range(len(x)):
-        if x[i] > x[max_index]:
-            max_index = i
-    return max_index
-
-def classify_example(x, sm, sparm):
-    """Given a pattern x, return the predicted label."""
-    # Believe it or not, this is a dot product.  The last element of
-    # sm.w is assumed to be the weight associated with the bias
-    # feature as explained earlier.
-    #class_size = 48
-    #observation_size = len(x[0])
-     
-    #prob_pre = [np.dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)]
-    #prob_now =[0] * class_size
-    #trace = [[0] * class_size] * len(x) 
-
-    #for each_observation, each_trace in zip(x[1:], trace[1:]):
-        #for now in range(class_size):
-            #tmp = [0] * class_size
-            #for pre in range(class_size):
-                #tmp[pre] = prob_pre[pre] + np.dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation) + sm.w[observation_size*class_size + pre * class_size + now]
-            #max_index = get_max(tmp)
-            #prob_now[now] = tmp[max_index]
-            #each_trace[now] = max_index
-
-        #for i in range(class_size):
-            #prob_pre[i] = prob_now[i]
-
-    #ans = [0] * len(x)
-    #ans[-1] = get_max(prob_pre)
-    #for i in range(1, len(x)):
-        #ans[-i-1] = trace[-i][ans[-i]]
-
-    #return ans
-    class_size = 48
-    observation_size = len(x[0])
-     
-    prob_pre = np.array([np.dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)])
-    prob_now =np.zeros(class_size)
-    trace = np.zeros((len(x),class_size)) 
-
-    for each_observation, each_trace in zip(x[1:], trace[1:]):
-        for now in range(class_size):
-            tmp = np.zeros(class_size)
-            for pre in range(class_size):
-                tmp[pre] = prob_pre[pre] + np.dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation) + sm.w[observation_size*class_size + pre * class_size + now]
-            max_index = np.argmax(tmp)
-            prob_now[now] = tmp[max_index]
-            each_trace[now] = max_index
-
-        prob_pre[i] = prob_now[i]
+        #print prob_pre == prob_now
+        #print prob_pre is prob_now
+        index += 1
 
     ans = [0] * len(x)
     ans[-1] = np.argmax(prob_pre)
@@ -215,89 +89,34 @@ def classify_example(x, sm, sparm):
 
     return ans
 
-#def find_most_violated_constraint(x, y, sm, sparm):
-    """Return ybar associated with x's most violated constraint.
 
-    Returns the label ybar for pattern x corresponding to the most
-    violated constraint according to SVM^struct cost function.  To
-    find which cost function you should use, check sparm.loss_type for
+def classify_example(x, sm, sparm):
+    return viterbi(x = x, w = sm.w)
 
-    whether this is slack or margin rescaling (1 or 2 respectively),
-    and check sparm.slack_norm for whether the slack vector is in an
-    L1-norm or L2-norm in the QP (1 or 2 respectively).
-
-    If this function is not implemented, this function is equivalent
-    to 'classify(x, sm, sparm)'.  The optimality guarantees of
-    Tsochantaridis et al. no longer hold, since this doesn't take the
-    loss into account at all, but it isn't always a terrible
-    approximation.  One still technically maintains the empirical
-    risk bound condition, but without any regularization."""
-    #score = classify_example(x,sm,sparm)
-    #discy, discny = y*score, -y*score + 1
-    #if discy > discny: return y
-    #return -y
-    #pass
-
-#def find_most_violated_constraint_slack(x, y, sm, sparm):
-    """Return ybar associated with x's most violated constraint.
-
-    The find most violated constraint function for slack rescaling.
-    The default behavior is that this returns the value from the
-    general find_most_violated_constraint function."""
-    #return find_most_violated_constraint(x, y, sm, sparm)
-
-#def find_most_violated_constraint_margin(x, y, sm, sparm):
-    """Return ybar associated with x's most violated constraint.
-
-    The find most violated constraint function for margin rescaling.
-    The default behavior is that this returns the value from the
-    general find_most_violated_constraint function."""
-    #return find_most_violated_constraint(x, y, sm, sparm)
+def find_most_violated_constraint(x, y, sm, sparm):
+    return viterbi(x = x, y = y, w = sm.w)
 
 def psi(x, y, sm, sparm):
-    print("psi")
-    """Return a feature vector representing pattern x and label y.
-
-    This is the combined feature function, which this returns either a
-    svmapi.Sparse object, or sequence of svmapi.Sparse objects (useful
-    during kernel evaluations, as all components undergo kernel
-    evaluation separately).  There is no default behavior."""
-    # In the case of binary classification, psi is just the class (+1
-    # or -1) times the feature vector for x, including that special
-    # constant bias feature we pretend that we have.
     import svmapi
-
     ###IMPORTANT###
     # (x,y) must be a value in seqDic!!
     feature = np.zeros(sm.size_psi)
     #feature = [0.0 for i in range(sm.size_psi)]
     for i in range(len(y) -1 ):   #y must be the same
-        num1 = charto48(y[i])
-        num2 = charto48(y[i+1])
+        num1 = y[i]
+        num2 = y[i+1]
         feature[FBANKS*PHONES + PHONES*num1 + num2] += 1
         for j in range(FBANKS):
             feature[num1*FBANKS+j] += x[i][j]
-    #print(feature)
     return svmapi.Sparse(feature)
 
 def loss(y, ybar, sparm):
-    """Return the loss of ybar relative to the true labeling y.
-    
-    Returns the loss for the correct label y and the predicted label
-    ybar.  In the event that y and ybar are identical loss must be 0.
-    Presumably as y and ybar grow more and more dissimilar the
-    returned value will increase from that point.  sparm.loss_function
-    holds the loss function option specified on the command line via
-    the -l option.
-
-    The default behavior is to perform 0/1 loss based on the truth of
-    y==ybar."""
-    # If they're the same sign, then the loss should be 0.
+    #print y, ybar
     cnt = 0
-    for i,j in zip(y,ybar):
-        if(i != j):
+    for i, j in zip(y, ybar):
+        if i != j:
             cnt += 1
-    return float(cnt)/len(ybar)
+    return float(cnt) / len(ybar)
 
 def print_iteration_stats(ceps, cached_constraint, sample, sm,
                           cset, alpha, sparm):
@@ -392,21 +211,3 @@ def write_label(fileptr, y):
     ignored.)  The default behavior is equivalent to
     'print>>fileptr,y'"""
     print>>fileptr,y
-
-def print_help():
-    """Help printed for badly formed CL-arguments when learning.
-
-    If this function is not implemented, the program prints the
-    default SVM^struct help string as well as a note about the use of
-    the --m option to load a Python module."""
-    import svmapi
-    print svmapi.default_help
-    print "This is a help string for the learner!"
-
-def print_help_classify():
-    """Help printed for badly formed CL-arguments when classifying.
-
-    If this function is not implemented, the program prints the
-    default SVM^struct help string as well as a note about the use of
-    the --m option to load a Python module."""
-    print "This is a help string for the classifer!"
