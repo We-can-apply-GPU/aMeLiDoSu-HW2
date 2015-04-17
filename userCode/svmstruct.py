@@ -1,5 +1,5 @@
 """A module that SVM^python interacts with to do its evil bidding."""
-
+import numpy as np
 PHONES = 48
 FBANKS = 69
 # Thomas Finley, tfinley@gmail.com
@@ -44,6 +44,7 @@ def read_examples(filename, sparm):
     ark = open('data/fbank/trainToy.ark','r')
     lab = open('data/label/trainToy.lab','r')
     datum = []
+    #print("JJ{}".format(np.ones(5)))
     curPos = 0
     seqDic = {}
 
@@ -67,10 +68,12 @@ def read_examples(filename, sparm):
             seqDic[datum[i][0]] = ([],[])
         #seqDic[datum[i][0]][0].append(datum[i][1])
         seqDic[datum[i][0]][0].append([float(datum[i][k]) for k in range(1,len(datum[i])-1)])
+        #seqDic[datum[i][0]][0] = np.array(seqDic[datum[i][0]][0])
+        #print("test {}".format(seqDic[datum[i][0]][0].type))
         seqDic[datum[i][0]][1].append(datum[i][-1])
     ans = []
     for key in seqDic:
-        ans.append(seqDic[key])
+        ans.append((np.array(seqDic[key][0]),seqDic[key][1]))
     return ans
 
 def init_model(sample, sm, sparm):
@@ -137,8 +140,8 @@ def init_constraints(sample, sm, sparm):
         constraints.append((lhs, 0))
     return constraints
 
-def dot(x, y):
-    return sum(xx*yy for xx, yy in zip(x, y))
+#def dot(x, y):
+    #return sum(xx*yy for xx, yy in zip(x, y))
 
 def get_max(x):
     max_index = 0
@@ -156,7 +159,7 @@ def classify_example(x, sm, sparm):
     class_size = 48
     observation_size = len(x[0])
      
-    prob_pre = [dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)]
+    prob_pre = [np.dot(sm.w[observation_size * i : observation_size * (i+1)], x[0]) for i in range(class_size)]
     prob_now =[0] * class_size
     trace = [[0] * class_size] * len(x) 
 
@@ -165,7 +168,7 @@ def classify_example(x, sm, sparm):
             tmp = [0] * class_size
             for pre in range(class_size):
                 tmp[pre] = prob_pre[pre]
-                tmp[pre] += dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation)
+                tmp[pre] += np.dot(sm.w[observation_size * now : observation_size * (now+1)], each_observation)
                 tmp[pre] += sm.w[observation_size*class_size + pre * class_size + now]
             max_index = get_max(tmp)
             prob_now[now] = tmp[max_index]
@@ -244,18 +247,8 @@ def psi(x, y, sm, sparm):
 
     ###IMPORTANT###
     # (x,y) must be a value in seqDic!!
-    #for key in seqDic:
-        #for i in range(len(key)-1):
-            #num1 = charto48(seqDic[key][i][-1])
-            #num2 = charto48(seqDic[key][i+1][-1])
-    #for i in range (start, end):
-        #num = charto48(dic[i][-1])
-        #if i != end-1:
-            #num2 = charto48(dic[i+1][-1])
-            #feature[48*69+48*num+num2] += 1
-        #for j in range (0, 69):
-            #feature[num*69+j] += dic[i][1+j]
-    feature = [0.0 for i in range(sm.size_psi)]
+    feature = np.zeros(sm.size_psi)
+    #feature = [0.0 for i in range(sm.size_psi)]
     for i in range(len(x) -1 ):   #y must be the same
         #num1 = charto48(seqDic[key][i][-1])
         #num2 = charto48(seqDic[key][i+1][-1])
@@ -264,7 +257,7 @@ def psi(x, y, sm, sparm):
         feature[FBANKS*PHONES + PHONES*num1 + num2] += 1
         for j in range(FBANKS):
             feature[num1*FBANKS+j] += x[i][j]
-    print(feature)
+    #print(feature)
     return svmapi.Sparse(feature)
 
 def loss(y, ybar, sparm):
@@ -284,7 +277,7 @@ def loss(y, ybar, sparm):
     for i,j in zip(y,ybar):
         if(i != j):
             cnt += 1
-    return cnt
+    return (cnt/len(ybar))
 
 def print_iteration_stats(ceps, cached_constraint, sample, sm,
                           cset, alpha, sparm):
