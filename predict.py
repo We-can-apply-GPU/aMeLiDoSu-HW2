@@ -10,7 +10,6 @@ def numTo48CharVec(y):
 
 def numTo48Char(num):
     a = 'Z'
-    print(num)
     chrmap = open('data/48_idx_chr.map','r')
     for line in chrmap:
         s = line.split()
@@ -31,8 +30,8 @@ def predict(modelFile,inFile,outFile):
         fout.write("id,phone_sequence\n")
         for data in datum:
             y = numTo48CharVec(classify(data[1],weight))
-            fout.write("{0},{1}\n".format(data[0],y))
-            #fout.write("{0},{1}\n".format(data[0],ans(y)))
+            #fout.write("{0},{1}\n".format(data[0],y))
+            fout.write("{0},{1}\n".format(data[0],ans(y)))
 
 def read_examples(filename):
     ark = open('data/fbank/' + filename + '.ark','r')
@@ -95,7 +94,17 @@ def classify(x,w):
     y = y[::-1]
     return y
 def ans(y):
-    
+    answer = []
+    start = False
+    pre = 'K'
+    for char in y:
+        now = char
+        if(char == 'K' and not(start)): #sil
+            continue
+        if(now != pre):
+            answer.append(now)
+            pre = now
+    return answer
 
 if __name__ == '__main__':
     predict(sys.argv[1],sys.argv[2],sys.argv[3]) 

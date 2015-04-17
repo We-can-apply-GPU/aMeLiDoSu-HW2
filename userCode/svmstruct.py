@@ -1,7 +1,7 @@
 import numpy as np
 PHONES = 48
 FBANKS = 69
-import theano.tensor as T
+#import theano.tensor as T
 
 def charto48(c):
     a = 0
@@ -134,41 +134,40 @@ def init_constraints(sample, sm, sparm):
     return constraints
 
 
-#def classify_example(x, sm, sparm):
-    #"""Given a pattern x, return the predicted label."""
-    #ql = list(sm.w)
-    #obs = np.array(ql[:69*48]).reshape((48, 69))
-    #trans = np.array(ql[69*48:]).reshape((48, 48))
-
-    #LEN = len(x)
-    #xx = np.array(x).reshape((LEN, 69))
-    #xxt = np.dot(xx, obs.T)
-
-    #y = []
-    #lgprob = np.zeros((48,1))
-    #lst = []
-
-    #for i in range(LEN):
-        #p = lgprob + trans + xxt[i,:]
-        #newlst = np.argmax(p, axis=0)
-        #lst.append(newlst)
-        #lgprob = np.max(p, axis=0).reshape((48,1))
-
-    #now = np.argmax(lgprob)
-    #y.append(now)
-    #for i in range(LEN-1, 0, -1):
-        #now = lst[i][now]
-        #y.append(now)
-
-    #y = y[::-1]
-    #return y
-
-
 def classify_example(x, sm, sparm):
-    return viterbi(x = x, w = sm.w)
+    """Given a pattern x, return the predicted label."""
+    ql = list(sm.w)
+    obs = np.array(ql[:69*48]).reshape((48, 69))
+    trans = np.array(ql[69*48:]).reshape((48, 48))
 
-def find_most_violated_constraint(x, y, sm, sparm):
-    return viterbi(x = x, y = y, w = sm.w)
+    LEN = len(x)
+    xx = np.array(x).reshape((LEN, 69))
+    xxt = np.dot(xx, obs.T)
+
+    y = []
+    lgprob = np.zeros((48,1))
+    lst = []
+
+    for i in range(LEN):
+        p = lgprob + trans + xxt[i,:]
+        newlst = np.argmax(p, axis=0)
+        lst.append(newlst)
+        lgprob = np.max(p, axis=0).reshape((48,1))
+
+    now = np.argmax(lgprob)
+    y.append(now)
+    for i in range(LEN-1, 0, -1):
+        now = lst[i][now]
+        y.append(now)
+
+    y = y[::-1]
+    return y
+    #return viterbi(x = x, w = sm.w)
+
+
+
+#def find_most_violated_constraint(x, y, sm, sparm):
+    #return viterbi(x = x, y = y, w = sm.w)
 
 def psi(x, y, sm, sparm):
     import svmapi
