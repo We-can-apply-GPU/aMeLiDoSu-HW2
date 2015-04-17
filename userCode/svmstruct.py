@@ -177,7 +177,7 @@ def classify_example(x, sm, sparm):
         for i in range(class_size):
             prob_pre[i] = prob_now[i]
 
-    ans = [0] * len(x)
+    ans = [0] * len(x[0])
     ans[-1] = get_max(prob_pre)
     for i in range(1, class_size):
         ans[-i-1] = trace[-i][ans[-i]]
