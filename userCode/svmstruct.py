@@ -1,53 +1,70 @@
 import numpy as np
 PHONES = 48
 FBANKS = 69
-import theano.tensor as T
 
-def charto48(c):
-    a = 0
-    chrmap = open('data/48_idx_chr.map','r')
-    for line in chrmap:
-        s = line.split()
-        for line in s:
-            if s[0] == c:
-                a = int(s[1])
-                break
-    return a
+char2index = {}
+index2char = {}
+a = 0
+chrmap = open('data/48_idx_chr.map','r')
+for line in chrmap:
+    line = line.split()
+    char2index[line[0]] = int(line[1])
+    index2char[int(line[1])] = line[0]
+
+def read_fbank():
+    fin = open("data/fbank/train.ark", "r")
+    lines = []
+    for line in fin:
+        line = line.rstrip().split(' ')
+        line[0] = line[0].split('_')
+        line[0][2] = int(line[0][2])
+        line[1:] = [float(ll) for ll in line[1:]]
+        lines += [line]
+    lines.sort(key=lambda line: line[0][2])
+    ans = {}
+    for line in lines:
+        if not ans.has_key(line[0][0]):
+            ans[line[0][0]] = {}
+        if not ans[line[0][0]].has_key(line[0][1]):
+            ans[line[0][0]][line[0][1]] = []
+        ans[line[0][0]][line[0][1]] += [line[1:]]
+    return ans
+
+def read_label():
+    fin = open("data/label/train.lab", "r")
+    lines = []
+    for line in fin:
+        line = line.rstrip().split(',')
+        line[0] = line[0].split('_')
+        line[0][2] = int(line[0][2])
+        lines += [line]
+    lines.sort(key=lambda line: line[0][2])
+    ans = {}
+    for line in lines:
+        if not ans.has_key(line[0][0]):
+            ans[line[0][0]] = {}
+        if not ans[line[0][0]].has_key(line[0][1]):
+            ans[line[0][0]][line[0][1]] = []
+        ans[line[0][0]][line[0][1]] += [line[1]]
+    return ans
 
 def read_examples(filename, sparm):
-    ark = open('data/fbank/' + filename + '.ark','r')
-    lab = open('data/label/' + filename + '.lab','r')
-    datum = []
-    #print("JJ{}".format(np.ones(5)))
-    curPos = 0
-    seqDic = {}
-
-    for line in ark:
-        s = line.rstrip().split(' ')
-        for line in lab:
-            l = line.rstrip().split(',')
-            if s[0] == l[0]:        #map label to train data
-                for i in range(1,len(s)):
-                    s[i] = float(s[i])
-                seqs = s[0].rstrip().split('_')
-                s[0] = seqs[0] + seqs[1]
-                s.append(l[1])
-                datum.append(s) 
-                curPos += 1
-                break               
-    #until now , datum is the list of [ID+frame  FBANKfeature phone]
-    for i in range(len(datum)):
-        #element = (datum[i][1],datum[i][2])
-        if(datum[i][0] not in seqDic):
-            seqDic[datum[i][0]] = ([],[])
-        #seqDic[datum[i][0]][0].append(datum[i][1])
-        seqDic[datum[i][0]][0].append([float(datum[i][k]) for k in range(1,len(datum[i])-1)])
-        #seqDic[datum[i][0]][0] = np.array(seqDic[datum[i][0]][0])
-        #print("test {}".format(seqDic[datum[i][0]][0].type))
-        seqDic[datum[i][0]][1].append(charto48(datum[i][-1]))
+    import cPickle
+    print "Reading fbank..."
+    #fbank = cPickle.load(open('data/fbank.pickle'))
+    fbank = read_fbank()
+    print "Reading label..."
+    #label = cPickle.load(open('data/label.pickle'))
+    label = read_label()
+    print "Processing..."
     ans = []
-    for key in seqDic:
-        ans.append((np.array(seqDic[key][0]),np.array(seqDic[key][1])))
+    cnt = int(filename)
+    for (i, (speaker_id, v)) in enumerate(label.iteritems()):
+        if i == cnt:
+            break
+        for (sequence_id, content) in v.iteritems():
+            content = [char2index[x] for x in content]
+            ans.append((np.array(fbank[speaker_id][sequence_id]), np.array(content)))
     return ans
 
 def init_model(sample, sm, sparm):
@@ -66,11 +83,12 @@ def viterbi(x, w, y = []):
                     if now != y[index]:
                         prob_now[now] += 1
             else:
-                tmp = np.zeros(PHONES)
+                ary = np.zeros(PHONES)
+                tmp = np.dot(w[FBANKS * now : FBANKS * (now+1)], xx)
                 for pre in range(PHONES):
-                    tmp[pre] = prob_pre[pre] + np.dot(w[FBANKS * now : FBANKS * (now+1)], xx) + w[FBANKS * PHONES + pre * PHONES + now]
-                max_index = np.argmax(tmp)
-                prob_now[now] = tmp[max_index]
+                    ary[pre] = prob_pre[pre] + tmp + w[FBANKS * PHONES + pre * PHONES + now]
+                max_index = np.argmax(ary)
+                prob_now[now] = ary[max_index]
                 if len(y) != 0:
                     if now != y[index]:
                         prob_now[now] += 1
@@ -78,8 +96,6 @@ def viterbi(x, w, y = []):
         for i in range(len(prob_pre)):
             prob_pre[i] = prob_now[i]
 
-        #print prob_pre == prob_now
-        #print prob_pre is prob_now
         index += 1
 
     ans = [0] * len(x)
@@ -179,27 +195,14 @@ def eval_prediction(exnum, (x, y), ypred, sm, sparm, teststats):
     return teststats
 
 def write_model(filename, sm, sparm):
-    """Dump the structmodel sm to a file.
-    
-    Write the structmodel sm to a file at path filename.
-
-    The default behavior is equivalent to
-    'cPickle.dump(sm,bz2.BZ2File(filename,'w'))'."""
     import cPickle, bz2
     f = bz2.BZ2File("model/" + filename, 'w')
     cPickle.dump(sm, f)
     f.close()
 
 def read_model(filename, sparm):
-    """Load the structure model from a file.
-    
-    Return the structmodel stored in the file at path filename, or
-    None if the file could not be read for some reason.
-
-    The default behavior is equivalent to
-    'return cPickle.load(bz2.BZ2File(filename))'."""
     import cPickle, bz2
-    return cPickle.load(bz2.BZ2File(filename))
+    return cPickle.load(bz2.BZ2File("model/" + filename, "r"))
 
 def write_label(fileptr, y):
     """Write a predicted label to an open file.
@@ -210,4 +213,4 @@ def write_label(fileptr, y):
     object is a file, not a string.  Attempts to close the file are
     ignored.)  The default behavior is equivalent to
     'print>>fileptr,y'"""
-    print>>fileptr,y
+    print>>fileptr, [index2char[yy] for yy in y]
