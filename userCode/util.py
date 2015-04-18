@@ -55,13 +55,31 @@ def read_weight(filename):
 def viterbi(x, w, y = []):
     w = list(w)
     lenx = len(x)
-    x = x.reshape((lenx, PHONES))
-    observation = w[:PHONES*FBANKS].reshape((PHONES, FBANKS))
-    trans = w[PHONES*FBANKS:].reshape((PHONES, PHONES))
-    xobs = np.dot(x, obs.T)
-
+    x = x.reshape((lenx, FBANKS))
+    observation = np.array(w[:PHONES*FBANKS]).reshape((PHONES, FBANKS))
+    trans = np.array(w[PHONES*FBANKS:]).reshape((PHONES, PHONES))
+    xobs = np.dot(x, observation.T)
+    """
+    print x.shape
+    print observation.T.shape
+    print trans.shape
+    print xobs.shape
+    """
+    prob_pre = np.zeros((PHONES, 1))
+    trace = []
     for i in range(lenx):
-
+        prob_now = prob_pre + trans + xobs[i, :]
+        argmax = np.argmax(prob_now, axis = 0)
+        prob_pre = np.max(prob_now, axis = 0).reshape((PHONES, 1))
+        trace.append(argmax)
+    now = np.argmax(prob_pre)
+    ans = []
+    ans.append(now)
+    for i in range(lenx-1, 0, -1):
+        now = trace[i][now]
+        ans.append(now)
+    return np.array(ans[::-1])
+    """
     prob_pre = np.zeros(PHONES)
     prob_now = np.zeros(PHONES)
     trace = np.zeros((len(x), PHONES), dtype=np.int16) 
@@ -95,3 +113,4 @@ def viterbi(x, w, y = []):
         ans[-i-1] = trace[-i][ans[-i]]
 
     return ans
+    """

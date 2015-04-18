@@ -2,6 +2,7 @@ data/
 model/
 svm-python-v204/svm_python_learn
 svm-python-v204/svm_python_classify
+result
 
 # Object files
 *.o
