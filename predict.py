@@ -20,16 +20,16 @@ if __name__ == "__main__":
                 fout.write("{0}_{1},".format(speaker_id, sequence_id))
                 ans = util.viterbi(np.array(data), np.array(weight))
                 for start in range(len(ans)):
-                    if ans[start] != 36:
+                    if ans[start] != 37:
                         break
                 for end in range(len(ans)-1, -1, -1):
-                    if ans[end] != 36:
+                    if ans[end] != 37:
                         break
                 pre = -1
                 for index in range(start, end+1):
                     if ans[index] == pre:
                         continue
-                    fout.write(util.index2char[ans[index]])
+                    fout.write(util.index2ans[ans[index]])
                     pre = ans[index]
                 fout.write("\n")
     fout.close()
