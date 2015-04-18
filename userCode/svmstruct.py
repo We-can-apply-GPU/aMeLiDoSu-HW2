@@ -189,7 +189,7 @@ def loss(y, ybar, sparm):
     for i, j in zip(y, ybar):
         if i != j:
             cnt += 1
-    return float(cnt) / len(ybar)
+    return float(cnt)/len(y)
 
 def print_iteration_stats(ceps, cached_constraint, sample, sm,
                           cset, alpha, sparm):

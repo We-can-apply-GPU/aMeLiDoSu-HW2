@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import json
 import numpy as np
 import sys
@@ -20,17 +22,16 @@ def numTo48Char(num):
     return a
 def predict(modelFile,inFile,outFile):
 
-    print("Loading...\n")
+    print("Loading...")
     with open("model/" + modelFile,'r') as w:
         weight = json.loads(w.readline())
     datum = read_examples(inFile)
 
-    print("Predicting...\n")
+    print("Predicting...")
     with open("output/" + outFile,'w') as fout:
         fout.write("id,phone_sequence\n")
         for data in datum:
             y = numTo48CharVec(classify(data[1],weight))
-            #fout.write("{0},{1}\n".format(data[0],y))
             fout.write("{0},{1}\n".format(data[0],ans(y)))
 
 def read_examples(filename):
@@ -47,7 +48,7 @@ def read_examples(filename):
         for i in range(1,len(s)):
             s[i] = float(s[i])
             seqs = s[0].rstrip().split('_')
-            s[0] = seqs[0] + seqs[1]
+            s[0] = seqs[0] + '_' + seqs[1]
             datum.append(s)
             curPos += 1
             break
@@ -66,7 +67,7 @@ def read_examples(filename):
 
 def classify(x,w):
     ql = list(w)
-    print(len(x[0]))
+    #print(len(x[0]))
     obs = np.array(ql[:69*48]).reshape((48, 69))
     trans = np.array(ql[69*48:]).reshape((48, 48))
 
@@ -94,15 +95,18 @@ def classify(x,w):
     y = y[::-1]
     return y
 def ans(y):
-    answer = []
+    answer = ""
     start = False
     pre = 'K'
     for char in y:
         now = char
-        if(char == 'K' and not(start)): #sil
-            continue
+        if( not (start)):
+            if now == 'K': #sil
+                continue
+            else:
+                start = True
         if(now != pre):
-            answer.append(now)
+            answer += now
             pre = now
     return answer
 
