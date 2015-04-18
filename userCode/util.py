@@ -49,8 +49,8 @@ def read_label(filename):
 
 def read_weight(filename):
     import json
-    f = open("model" + filename, "r")
-    return json.loads(f[0])
+    f = open("model/" + filename, "r")
+    return json.loads(f.readline())
 
 def viterbi(x, w, y = []):
     prob_pre = np.zeros(PHONES)

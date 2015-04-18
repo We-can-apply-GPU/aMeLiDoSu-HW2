@@ -11,8 +11,8 @@ def read_examples(filename, sparm):
     print "Reading label..."
     label = util.read_label("trainToy")
     print "Processing..."
-    ans = []
     cnt = int(filename)
+    ans = []
     for (i, (speaker_id, v)) in enumerate(label.iteritems()):
         if i == cnt:
             break
@@ -22,7 +22,7 @@ def read_examples(filename, sparm):
     return ans
 
 def init_model(sample, sm, sparm):
-    sm.size_psi = (PHONES + FBANKS) * PHONES  #48*48 + 69 * 48
+    sm.size_psi = (PHONES + FBANKS) * PHONES
 
 def classify_example(x, sm, sparm):
     return util.viterbi(x = x, w = sm.w)
@@ -54,10 +54,14 @@ def loss(y, ybar, sparm):
 
 def print_learning_stats(sample, sm, cset, alpha, sparm):
     print 'Losses:',
-    print [loss(y, classify_example(x, sm, sparm), sparm) for x,y in sample]
+    for x, y in sample:
+        ybar = classify_example(x, sm, sparm)
+        print y
+        print ybar
+        print loss(y, ybar, sparm)
 
 def write_model(filename, sm, sparm):
-    f = open("model/" + filename + '.weight', 'w')
+    f = open("model/" + filename, 'w')
     import json
     f.write(json.dumps(sm.w[:]))
     f.write('\n')
