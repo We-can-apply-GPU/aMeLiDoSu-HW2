@@ -1,4 +1,3 @@
-Please don't read me @@
 ### Usage
-* ./gen.sh (# of train dataset)
-* ./train.sh (ex: trainToy) (model name) (c=?) 
+* ./train.sh (# of speakers) (model name) (c=?) 
+* ./eval.sh (# of speakers) (model name) (output)
