@@ -53,6 +53,15 @@ def read_weight(filename):
     return json.loads(f.readline())
 
 def viterbi(x, w, y = []):
+    w = list(w)
+    lenx = len(x)
+    x = x.reshape((lenx, PHONES))
+    observation = w[:PHONES*FBANKS].reshape((PHONES, FBANKS))
+    trans = w[PHONES*FBANKS:].reshape((PHONES, PHONES))
+    xobs = np.dot(x, obs.T)
+
+    for i in range(lenx):
+
     prob_pre = np.zeros(PHONES)
     prob_now = np.zeros(PHONES)
     trace = np.zeros((len(x), PHONES), dtype=np.int16) 
