@@ -1,21 +1,18 @@
 import numpy as np
 import sys
 sys.path.append("userCode")
-print sys.path
 import util
 PHONES = 48
 FBANKS = 69
 
 def read_examples(filename, sparm):
-    fbank = util.read_fbank("train")
+    fbank = util.read_fbank(filename)
     print "Reading label..."
-    label = util.read_label("train")
+    label = util.read_label(filename)
     print "Processing..."
-    cnt = int(filename)
+    print len(label)
     ans = []
     for (i, (speaker_id, v)) in enumerate(label.iteritems()):
-        if i == cnt:
-            break
         for (sequence_id, content) in v.iteritems():
             content = [util.char2index[x] for x in content]
             ans.append((np.array(fbank[speaker_id][sequence_id]), np.array(content)))
@@ -61,12 +58,6 @@ def print_learning_stats(sample, sm, cset, alpha, sparm):
         print loss(y, ybar, sparm)
 
 def write_model(filename, sm, sparm):
-    """Dump the structmodel sm to a file.
-    
-    Write the structmodel sm to a file at path filename.
-
-    The default behavior is equivalent to
-    'cPickle.dump(sm,bz2.BZ2File(filename,'w'))'."""
     import cPickle, bz2, json
     f = bz2.BZ2File("SVMmodel/" + filename, 'w')
     cPickle.dump(sm, f)
