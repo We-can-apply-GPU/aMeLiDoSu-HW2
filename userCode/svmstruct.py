@@ -4,7 +4,7 @@ sys.path.append("userCode")
 import util
 PHONES = 48
 FBANKS = 69
-
+MAX_SPEAKER = 1
 def read_examples(filename, sparm):
     fbank = util.read_fbank(filename)
     print "Reading label..."
@@ -16,6 +16,8 @@ def read_examples(filename, sparm):
         for (sequence_id, content) in v.iteritems():
             content = [util.char2index[x] for x in content]
             ans.append((np.array(fbank[speaker_id][sequence_id]), np.array(content)))
+        if i == MAX_SPEAKER:
+            break
     return ans
 
 def init_model(sample, sm, sparm):
@@ -25,7 +27,7 @@ def classify_example(x, sm, sparm):
     return util.viterbi(x = x, w = sm.w)
 
 def find_most_violated_constraint(x, y, sm, sparm):
-    return util.viterbi(x = x, y = y, w = sm.w)
+    return util.viterbiDelta(x = x, y = y, w = sm.w)
 
 def psi(x, y, sm, sparm):
     import svmapi
@@ -43,11 +45,27 @@ def psi(x, y, sm, sparm):
 
 def loss(y, ybar, sparm):
     #print y, ybar
+    #cnt = 0
+    #for i, j in zip(y, ybar):
+        #if i != j:
+            #cnt += 1
+    #return float(cnt)/len(y)
+    
     cnt = 0
-    for i, j in zip(y, ybar):
-        if i != j:
+    yl = ''
+    ybl = ''
+    for i in range(len(y)):
+        alpha = (y[i] != yl)
+        beta = (ybar[i] != ybl)
+        if alpha:
             cnt += 1
-    return float(cnt)/len(y)
+            yl = y[i]
+        if beta:
+            cnt += 1
+            ybl = ybar[i]
+        if (alpha or beta) and (y[i] == ybar[i]):
+            cnt -= 2
+    return cnt
 
 def print_learning_stats(sample, sm, cset, alpha, sparm):
     print 'Losses:',

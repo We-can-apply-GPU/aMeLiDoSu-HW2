@@ -81,6 +81,42 @@ def viterbi(x, w, y = []):
         now = trace[i][now]
         ans.append(now)
     return np.array(ans[::-1])
+
+def viterbiDelta(x, w, y = []):
+    w = list(w)
+    lenx = len(x)
+    x = x.reshape((lenx, FBANKS))
+    observation = np.array(w[:PHONES*FBANKS]).reshape((PHONES, FBANKS))
+    trans = np.array(w[PHONES*FBANKS:]).reshape((PHONES, PHONES))
+    xobs = np.dot(x, observation.T)
+    """
+    print x.shape
+    print observation.T.shape
+    print trans.shape
+    print xobs.shape
+    """
+    prob_pre = np.zeros((PHONES, 1))
+    trace = []
+    for i in range(lenx):
+        alpha = np.array((i == 0) or (y[i] != y[i-1]))
+        beta = (~np.identity(PHONES, dtype=bool)) | (i == 0)
+        gamma = np.zeros((1,PHONES))
+        gamma[0,y[i]] = 1
+        gamma = gamma * (alpha | beta)
+        alpha = alpha.astype(float)
+        beta = beta.astype(float)
+
+        prob_now = prob_pre + trans + xobs[i, :] + 1*alpha + beta - 2*gamma
+        argmax = np.argmax(prob_now, axis = 0)
+        prob_pre = np.max(prob_now, axis = 0).reshape((PHONES, 1))
+        trace.append(argmax)
+    now = np.argmax(prob_pre)
+    ans = []
+    ans.append(now)
+    for i in range(lenx-1, 0, -1):
+        now = trace[i][now]
+        ans.append(now)
+    return np.array(ans[::-1])
     """
     prob_pre = np.zeros(PHONES)
     prob_now = np.zeros(PHONES)
