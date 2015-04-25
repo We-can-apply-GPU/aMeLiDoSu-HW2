@@ -1,5 +1,6 @@
 data/
 model/
+SVMmodel/
 svm-python-v204/svm_python_learn
 svm-python-v204/svm_python_classify
 result
