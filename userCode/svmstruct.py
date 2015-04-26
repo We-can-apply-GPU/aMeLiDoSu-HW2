@@ -7,8 +7,9 @@ PHONES = 48
 FBANKS = 69
 
 def read_examples(filename, sparm):
+    print("\nReading fbank...")
     fbank = util.read_fbank(filename)
-    print("\nReading label...")
+    print("Reading label...")
     label = util.read_label(filename)
     print("Processing...")
     ftmp = []

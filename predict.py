@@ -27,7 +27,7 @@ if __name__ == "__main__":
     fbank = util.read_fbank("test")
     weight = np.array(util.read_weight(sys.argv[1]))
     print("Processing")
-    fout = open(sys.argv[1]+".ans", "w")
+    fout = open("model/" + sys.argv[1]+".ans", "w")
     fout.write("id,phone_sequence")
     fout.write("\n")
     ftmp = []
