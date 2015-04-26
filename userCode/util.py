@@ -30,6 +30,7 @@ def read_label(filename):
         line = line.rstrip().split(',')
         line[0] = line[0].split('_')
         line[0][2] = int(line[0][2])
+        line[1] = char2index[line[1]]
         lines += [line]
     return lines
 
@@ -50,7 +51,7 @@ def viterbi(x, w, y = []):
     for i in range(lenx):
         prob_now = prob_pre + trans + xobs[i, :]
         if len(y) > 0:
-            prob_now[:,y[i]] -= 1/len(y)
+            prob_now[:,y[i]] -= 1
         argmax = np.argmax(prob_now, axis = 0)
         prob_pre = np.max(prob_now, axis = 0).reshape((PHONES, 1))
         trace.append(argmax)

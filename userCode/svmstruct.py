@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import sys
 sys.path.append("userCode")
@@ -7,10 +8,9 @@ FBANKS = 69
 
 def read_examples(filename, sparm):
     fbank = util.read_fbank(filename)
-    print "Reading label..."
+    print("\nReading label...")
     label = util.read_label(filename)
-    print "Processing..."
-    print len(label)
+    print("Processing...")
     ftmp = []
     ltmp = []
     ans = []
@@ -20,7 +20,7 @@ def read_examples(filename, sparm):
             ftmp = []
             ltmp = []
         ftmp += [f[1:]]
-        ltmp += [util.char2index[l[1]]]
+        ltmp += [l[1]]
     if len(ftmp) != 0:
         ans.append((np.array(ftmp), np.array(ltmp)))
     return ans
@@ -28,13 +28,12 @@ def read_examples(filename, sparm):
 def init_model(sample, sm, sparm):
     sm.size_psi = (PHONES + FBANKS) * PHONES
 
-def classify_example(x, sm, sparm):
-    return util.viterbi(x = x, w = sm.w)
-
 def find_most_violated_constraint_margin(x, y, sm, sparm):
+    #print('f', sep='', end='')
     return util.viterbi(x = x, y = y, w = sm.w)
 
 def psi(x, y, sm, sparm):
+    #print('p', sep='', end='')
     import svmapi
     feature = np.zeros((sm.size_psi, 1))
     for i in range(len(y)):   #y must be the same
@@ -50,13 +49,10 @@ def loss(y, ybar, sparm):
     for i, j in zip(y, ybar):
         if i != j:
             cnt += 1
-    return float(cnt)/len(y)
+    return cnt
 
 def print_learning_stats(sample, sm, cset, alpha, sparm):
-    print 'Losses:',
-    for x, y in sample:
-        ybar = classify_example(x, sm, sparm)
-        print loss(y, ybar, sparm)
+    pass
 
 def write_model(filename, sm, sparm):
     import cPickle, bz2, json
