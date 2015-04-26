@@ -5,10 +5,10 @@
 int main(int argc, char* argv[])
 {
   if (argc < 2) return 0;
-  std::ifstream fbankin("../data/fbank/train.ark");
-  std::ifstream labelin("../data/label/train.lab");
-  std::ofstream fbankout("../data/fbank/trainToy.ark");
-  std::ofstream labelout("../data/label/trainToy.lab");
+  std::ifstream fbankin("data/fbank/train.ark");
+  std::ifstream labelin("data/label/train.lab");
+  std::ofstream fbankout("data/fbank/trainToy.ark");
+  std::ofstream labelout("data/label/trainToy.lab");
 
   std::string fbank, label, pre_seq = "", now_seq;
   int cnt = std::stoi(std::string(argv[1]));
