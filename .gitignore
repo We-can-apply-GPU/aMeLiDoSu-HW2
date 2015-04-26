@@ -4,6 +4,8 @@ SVMmodel/
 svm-python-v204/svm_python_learn
 svm-python-v204/svm_python_classify
 result
+*.swp
+*.ans
 
 # Object files
 *.o
