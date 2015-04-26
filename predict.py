@@ -41,6 +41,5 @@ if __name__ == "__main__":
         ftmp += [f[1:]]
     if len(ftmp) != 0:
         ans = util.viterbi(np.array(ftmp), weight)
-        print(ans)
         printtrim(ans, fout)
     fout.close()
