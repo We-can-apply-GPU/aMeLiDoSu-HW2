@@ -2,6 +2,7 @@ import numpy as np
 index2char = {}
 char2index = {}
 index2ans = {}
+char2ans={}
 a = 0
 chrmap = open('data/48_idx_chr.map','r')
 for line in chrmap:
@@ -9,6 +10,7 @@ for line in chrmap:
     index2char[int(line[1])] = line[0]
     char2index[line[0]] = int(line[1])
     index2ans[int(line[1])] = line[2]
+    char2ans[line[0]] = line[2]
 PHONES = 48
 FBANKS = 69
 
