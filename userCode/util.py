@@ -41,11 +41,20 @@ def read_weight(filename):
     f = open("model/" + filename, "r")
     return json.loads(f.readline())
 
-def viterbi(x, w, y = []):
+def viterbi(x, w, y = [],hw1="",hw1Rate = 0):
     w = list(w)
     lenx = len(x)
     x = x.reshape((lenx, FBANKS))
+
     observation = np.array(w[:PHONES*FBANKS]).reshape((PHONES, FBANKS))
+
+    if (hw1!=""):
+        hw1Mat = createHw1Mat(hw1)
+    else:
+        hw1Mat = np.zeros(observation.shape)
+
+    observation = observation + (hw1Rate * hw1Mat)
+
     trans = np.array(w[PHONES*FBANKS:]).reshape((PHONES, PHONES))
     xobs = np.dot(x, observation.T)
     prob_pre = np.zeros((PHONES, 1))

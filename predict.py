@@ -32,11 +32,13 @@ if __name__ == "__main__":
     fout.write("\n")
     ftmp = []
     print("{0}_{1},".format(fbank[0][0][0], fbank[0][0][1]), file=fout, end='')
+    indexCnt = 0
     for f in fbank:
         if f[0][2] == 1 and len(ftmp) != 0:
-            ans = util.viterbi(np.array(ftmp), weight)
+            ans = util.viterbi(np.array(ftmp), weight,[],sys.argv[2],100,indexCnt)
             printtrim(ans, fout)
             ftmp = []
+            indexCnt += 1
             print("{0}_{1},".format(f[0][0], f[0][1]), file=fout, end='')
         ftmp += [f[1:]]
     if len(ftmp) != 0:
