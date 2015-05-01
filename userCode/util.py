@@ -48,11 +48,12 @@ def viterbi(x, w, y = [],hw1Rate = 0,indexCnt=0,hw1MatList=[]):
 
     observation = np.array(w[:PHONES*FBANKS]).reshape((PHONES, FBANKS))
 
-    if(len(hw1MatList) != 0): #use  hw1
-        observation = observation + (hw1Rate * hw1MatList[indexCnt])
-
     trans = np.array(w[PHONES*FBANKS:]).reshape((PHONES, PHONES))
     xobs = np.dot(x, observation.T)
+    print(xobs)
+    if(len(hw1MatList) != 0): #use  hw1
+        xobs = xobs + (1 * hw1MatList[indexCnt])
+
     prob_pre = np.zeros((PHONES, 1))
     trace = []
     for i in range(lenx):
@@ -69,13 +70,16 @@ def viterbi(x, w, y = [],hw1Rate = 0,indexCnt=0,hw1MatList=[]):
         now = trace[i][now]
         ans.append(now)
     return np.array(ans[::-1])
-def hw1data(f = 'data'):
+def hw1data(f ='data/HW1data'):
     d = open(f)
     now=['people','talk']
     ls = []
     m = []
     for i in d:
         s = i.rstrip().split(',[')
+        #print
+        #if s[1].__len__()==0:
+            #print(s)
         n = s[0].split('_')
         s = (s[1][:-1]).split(', ')
         if now[0]!='people':
