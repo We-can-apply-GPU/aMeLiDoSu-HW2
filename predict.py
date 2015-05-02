@@ -27,7 +27,7 @@ if __name__ == "__main__":
     fbank = util.read_fbank("test")
     weight = np.array(util.read_weight(sys.argv[1]))
     print("Processing")
-    fout = open("model/" + sys.argv[1]+".ans", "w")
+    fout = open("output/" + sys.argv[1]+".ans", "w")
     fout.write("id,phone_sequence")
     fout.write("\n")
     ftmp = []
@@ -37,7 +37,8 @@ if __name__ == "__main__":
     
     for f in fbank:
         if f[0][2] == 1 and len(ftmp) != 0:
-            ans = util.viterbi(np.array(ftmp), weight,[],100,indexCnt,hw1MatList)
+            ans = util.viterbi(np.array(ftmp), weight,[],10,hw1MatList[indexCnt])
+            print(ans)
             printtrim(ans, fout)
             ftmp = []
             indexCnt += 1

@@ -41,18 +41,19 @@ def read_weight(filename):
     f = open("model/" + filename, "r")
     return json.loads(f.readline())
 
-def viterbi(x, w, y = [],hw1Rate = 0,indexCnt=0,hw1MatList=[]):
+def viterbi(x, w, y = [],hw1Rate = 0,hw1Mat=np.zeros(0)):
     w = list(w)
     lenx = len(x)
     x = x.reshape((lenx, FBANKS))
 
     observation = np.array(w[:PHONES*FBANKS]).reshape((PHONES, FBANKS))
-
     trans = np.array(w[PHONES*FBANKS:]).reshape((PHONES, PHONES))
     xobs = np.dot(x, observation.T)
-    print(xobs)
-    if(len(hw1MatList) != 0): #use  hw1
-        xobs = xobs + (1 * hw1MatList[indexCnt])
+
+    #print(xobs.shape == hw1Mat.shape)
+    if(hw1Rate !=0): #use  hw1
+        xobs = np.log(hw1Mat) * hw1Rate + xobs
+        #xobs = hw1Mat * hw1Rate
 
     prob_pre = np.zeros((PHONES, 1))
     trace = []
@@ -70,6 +71,31 @@ def viterbi(x, w, y = [],hw1Rate = 0,indexCnt=0,hw1MatList=[]):
         now = trace[i][now]
         ans.append(now)
     return np.array(ans[::-1])
+
+def hw1Preprocess(ls):
+    ll = ls
+    if(len(ls) != 48):
+        print("ERROR")
+    else:
+        ll[29] = ls[30]
+        ll[30] = ls[29]
+        ll[35] = ls[37]
+        ll[36] = ls[35]
+        ll[37] = ls[36]
+        ll[38] = ls[39]
+        ll[39] = ls[38]
+        ll[42] = ls[43]
+        ll[43] = ls[42]
+        ll[46] = ls[47]
+        ll[47] = ls[46]
+        #ls[29],ls[30] = ls[30],ls[29]
+        #ls[35],ls[36] = ls[36],ls[35]
+        #ls[36],ls[37] = ls[37],ls[36]
+        #ls[38],ls[39] = ls[39],ls[38]
+        #ls[42],ls[43] = ls[43],ls[42]
+        #ls[46],ls[47] = ls[47],ls[46]
+    return ll
+
 def hw1data(f ='data/HW1data'):
     d = open(f)
     now=['people','talk']
@@ -77,11 +103,11 @@ def hw1data(f ='data/HW1data'):
     m = []
     for i in d:
         s = i.rstrip().split(',[')
-        #print
-        #if s[1].__len__()==0:
-            #print(s)
         n = s[0].split('_')
         s = (s[1][:-1]).split(', ')
+
+        s = hw1Preprocess(s)
+
         if now[0]!='people':
             if now[0] != n[0] or now[1] != n[1]:
                 ls.append(np.array(m))
