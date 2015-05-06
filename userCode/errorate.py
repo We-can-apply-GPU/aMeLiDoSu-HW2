@@ -18,13 +18,15 @@ def read(infile="./train.csv",ans="./ans.csv"):
     x = open(infile)
     y = open(ans)
     err = 0
+    reflen = 0 
     dic = {}
-    for line in x:
-        line = line.rstrip().split(",")
-        dic[line[0]] = line[1]
     for line in y:
         line = line.rstrip().split(",")
+        dic[line[0]] = line[1]
+    for line in x:
+        line = line.rstrip().split(",")
         err += error(dic[line[0]],line[1])
-    return err
+        reflen+=dic[line[0]].__len__()
+    return err/reflen
 
 print(read())
